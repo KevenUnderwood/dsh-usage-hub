@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="dsh-usage-hub">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7a9bf0" />
+      <stop offset="1" stop-color="#4f6fd6" />
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#bg)" />
+  <!-- Three quota windows as rounded bars of decreasing length. -->
+  <rect x="14" y="18" width="36" height="7" rx="3.5" fill="#ffffff" opacity="0.95" />
+  <rect x="14" y="29" width="26" height="7" rx="3.5" fill="#ffffff" opacity="0.72" />
+  <rect x="14" y="40" width="16" height="7" rx="3.5" fill="#ffffff" opacity="0.5" />
+</svg>

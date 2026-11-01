@@ -1,0 +1,98 @@
+{
+  "name": "dsh-usage-hub",
+  "version": "0.1.0",
+  "description": "Provider-account usage for DeepSeek Harness: quota windows, credit balance and token usage for the model a conversation runs on, with per-provider adapters and a separate provider directory. · 给 DeepSeek Harness 用的供应商用量面板：额度窗口、账户余额与 token 用量随模型自动切换，供应商清单独立成页。",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek",
+    "deepseek-harness",
+    "cordis",
+    "cordis-plugin",
+    "llm",
+    "usage",
+    "token-usage",
+    "quota",
+    "billing",
+    "balance",
+    "minimax",
+    "anthropic",
+    "openai",
+    "kimi",
+    "zhipu",
+    "openrouter",
+    "copilot",
+    "new-api"
+  ],
+  "author": {
+    "name": "KevenUnderwood",
+    "url": "https://github.com/KevenUnderwood"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KevenUnderwood/dsh-usage-hub.git"
+  },
+  "homepage": "https://github.com/KevenUnderwood/dsh-usage-hub#readme",
+  "bugs": {
+    "url": "https://github.com/KevenUnderwood/dsh-usage-hub/issues"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/providers.js",
+    "lib/client.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "locale",
+    "LICENSE",
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "test": "node tools/smoke-test.mjs && node tools/client-check.mjs",
+    "smoke": "node tools/smoke-test.mjs",
+    "check:client": "node tools/client-check.mjs",
+    "verify": "node tools/smoke-test.mjs && node tools/client-check.mjs",
+    "prepublishOnly": "node tools/smoke-test.mjs && node tools/client-check.mjs"
+  },
+  "engines": {
+    "dsh": ">=0.2.1-rc.1",
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/schemastery": "^3.18.5"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    }
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-renderer"
+      ]
+    }
+  }
+}

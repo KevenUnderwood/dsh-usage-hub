@@ -1,0 +1,8 @@
+# dsh 组合包 patch：把本插件插入 profile 的组合层。
+#
+# 组合包被用户在 profile 的 dsh.profile.bundles 里选中时，这个 patch 会
+# 往条目列表里插入一条本插件的 Loader 条目。行里的包名由 Loader 从本包
+# 所在目录解析（就像 dshmarket 自己的 patch 写 `name: 'dshmarket'`）。
+- insert:
+    - id: "usage-hub"
+      name: "dsh-usage-hub"

@@ -1,0 +1,9 @@
+node_modules/
+*.log
+*.tgz
+
+# 作者自用的本机调试工具：会读取本机凭据与会话日志，不进仓库
+tools/local/
+
+# 本地调试时解包 DSH 用的临时产物（不是插件的一部分）
+tools/local/asar-extract/

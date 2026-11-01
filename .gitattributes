@@ -1,0 +1,6 @@
+# 仓库内统一用 LF，避免不同平台的换行差异进到 npm 包里。
+* text=auto eol=lf
+
+# 批处理脚本保留 Windows 换行。
+*.bat text eol=crlf
+*.cmd text eol=crlf
