@@ -1,31 +1,31 @@
 <p align="right">
-  <a href="./README.zh-CN.md">简体中文</a>
+  <a href="./README.EN.md">English</a>
 </p>
 
 <div align="center">
 
 # dsh-usage-hub
 
-**Usage & quota for every provider your session runs on.**
+**当前会话用到的每个供应商，一眼看到额度。**
 
 [![npm](https://img.shields.io/npm/v/dsh-usage-hub)](https://www.npmjs.com/package/dsh-usage-hub)
 [![npm downloads](https://img.shields.io/npm/dm/dsh-usage-hub)](https://www.npmjs.com/package/dsh-usage-hub)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 ![DeepSeek Harness plugin](https://img.shields.io/badge/DeepSeek%20Harness-plugin-202724)
 
-A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) plugin that shows the
-**quota windows, credit balance and token usage** of the provider account behind the model your
-conversation is running on — and switches to another provider the moment you switch models.
+给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（DSH）用的插件：
+显示**当前对话所跑模型背后的供应商账户**的额度窗口、账户余额与 token 用量——
+你一换模型，它就跟着换供应商。
 
 </div>
 
 ---
 
-## What it does
+## 它做什么
 
-Switch models in DSH, and the usage panel follows: the query target comes from the session's
-`modelSelection` projection, so a model switch *is* a target switch. No configuration, no
-"select which account to query" dropdown to get wrong.
+在 DSH 里切换模型，用量面板自动跟上：查询对象取自会话的 `modelSelection` 投影，
+所以「换模型」就是「换查询对象」。不需要任何配置，也没有「先选个账户再查」的
+下拉框让你选错。
 
 ```
 ┌─ 用量 / Usage ─────────────────────────────────────────────────┐
@@ -50,7 +50,7 @@ Switch models in DSH, and the usage panel follows: the query target comes from t
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-The provider directory lives on **its own tab**, so it never gets mixed into the usage numbers:
+供应商清单**单独一页**，不和用量数字混在一起：
 
 ```
 ┌─ 供应商 / Providers ───────────────────────────────────────────┐
@@ -64,123 +64,117 @@ The provider directory lives on **its own tab**, so it never gets mixed into the
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-## Features
+## 功能
 
-- **Follows the session model.** The browser reads `next ?? lastUsed` from the session's
-  `modelSelection` projection and re-queries with the new provider. Switching models switches
-  the query target.
-- **Per-provider adapters.** Each provider declares its own usage endpoint, its auth-header
-  format and how to read its response. Fourteen providers ship out of the box, plus a generic
-  adapter for self-hosted OpenAI-compatible gateways.
-- **Quota windows as meters.** Every window gets a progress bar, coloured by how much is left
-  (green ≥ 40 %, amber ≥ 15 %, red below), with the used percentage and the reset time.
-- **Credential state, not credential values.** The provider tab shows which credential
-  *reference* each provider uses and whether it resolves — never the key itself.
-- **Cross-session token totals** aggregated by model, replayed from the session log.
-- **Bilingual UI** (中文 / English), following the harness language.
-- **Zero runtime dependencies.** The host half uses Node built-ins only; `schemastery` is an
-  optional peer used solely for the config schema, and the plugin loads without it.
+- **跟随会话模型**：浏览器读会话 `modelSelection` 投影的 `next ?? lastUsed`，带着新的
+  provider 重新查询。切模型就是切换查询对象。
+- **逐供应商适配器**：每个供应商各自声明用量接口、鉴权头写法和响应解析方式。
+  内置十四家供应商，外加一个给自建 OpenAI 兼容中转站用的通用适配器。
+- **额度窗口画成进度条**：按剩余量着色（≥40 % 绿、≥15 % 橙、更低为红），
+  下面跟已用百分比与重置时间。
+- **只显示凭据状态，不显示凭据本身**：供应商页列出每个供应商用的**凭据引用名**
+  与它能否解析成功，绝不显示 key。
+- **跨会话 token 汇总**，按模型聚合，从会话日志回放得出。
+- **中英双语界面**，跟随 harness 的语言设置。
+- **零运行时依赖**：宿主半边只用 Node 内置能力；`schemastery` 是可选 peer，
+  仅用于配置 schema，缺了插件照样能装。
 
-## Install
+## 安装
 
-Requires an existing DeepSeek Harness installation (with the Web surface) and Node.js ≥ 20.
+需要一个已有的 DeepSeek Harness 安装（带 Web 界面）与 Node.js ≥ 20。
 
 ```sh
-# npm (recommended)
+# npm（推荐）
 dsh plugin --profile web add dsh-usage-hub
 
-# or from GitHub
+# 或从 GitHub 安装
 dsh plugin --profile web add github:KevenUnderwood/dsh-usage-hub
 
-# or from a local checkout
+# 或从本地目录安装
 dsh plugin --profile web add ./dsh-usage-hub
 ```
 
-Restart `dsh web` (or the desktop app) afterwards and reload the page.
+装完**重启 `dsh web`**（或桌面版），然后刷新页面。
 
-> **Install the tarball, not a linked checkout that carries its own `node_modules`.** Such a
-> checkout shadows the harness's shared `@deepseek-ai/cordis` instance, and the host half then
-> never registers — the browser gets a 404 on every request. This plugin has no runtime
-> dependencies, so a plain checkout (with no `npm install` inside it) is fine; if you did
-> install dependencies in the checkout, remove that `node_modules` or install the packed
-> tarball instead:
+> **装 tarball，别装带着自己 `node_modules` 的链接目录。** 这种目录会遮蔽 harness
+> 共享的 `@deepseek-ai/cordis` 实例，宿主半边因此根本注册不上——浏览器每个请求都
+> 404。本插件没有运行时依赖，所以一个干净的目录（里面没跑过 `npm install`）没问题；
+> 如果你在目录里装过依赖，删掉那个 `node_modules`，或者改装打包好的 tarball：
 >
 > ```sh
 > npm pack && dsh plugin --profile web add ./dsh-usage-hub-0.1.0.tgz
 > ```
 
-The desktop app keeps its own profile (`~/.dsh/profiles/desktop`); install the plugin there
-too if you use the desktop window.
+桌面版有自己独立的 profile（`~/.dsh/profiles/desktop`）；用桌面窗口的话那边也要装一份。
 
-## Supported providers
+## 支持的供应商
 
-The provider is recognised by its **DSH provider route** first, then by its **base URL**, and
-finally — if the route has a `baseURL` but matches nothing known — by the generic relay adapter.
+识别顺序：**DSH 供应商路由 id** → **base URL** → 若路由有 `baseURL` 但谁都不像，
+则交给通用中转站适配器。
 
-| Route | Reported as | Endpoint | Shows |
+| 路由 | 展示形态 | 接口 | 显示内容 |
 |---|---|---|---|
-| `deepseek-official`, `deepseek` | balance | `GET https://api.deepseek.com/user/balance` | balance per currency |
-| `deepseek-account` | balance | `ctx.deepseekAccount.getBalance()` | wallet balances of the signed-in account, no API key needed |
-| `anthropic` | quota windows | `GET https://api.anthropic.com/api/oauth/usage` | 5-hour, 7-day and per-model weekly windows |
-| `openai-codex` | quota windows + credits | `GET https://chatgpt.com/backend-api/wham/usage` | 5-hour / weekly windows, Codex credits |
-| `kimi-coding` | quota windows | `GET https://api.kimi.com/coding/v1/usages` | 5-hour and weekly windows |
-| `zai-coding-cn`, `zai` | quota windows | `GET https://open.bigmodel.cn/api/monitor/usage/quota/limit` | 5-hour and weekly windows; falls back to the account balance for pay-as-you-go accounts |
-| `minimax-cn`, `minimax` | quota windows | `GET https://api.minimaxi.com/v1/api/openplatform/coding_plan/remains` | 5-hour and weekly windows |
-| `opencode-go` | quota windows | `GET https://opencode.ai/zen/go/v1/usage` | rolling, weekly and monthly windows |
-| `github-copilot` | quota | `GET https://api.github.com/copilot_internal/user` | premium-interaction allowance |
-| `openrouter` | balance | `GET https://openrouter.ai/api/v1/credits` | credits used / total |
-| `moonshotai-cn`, `moonshotai` | balance | `GET https://api.moonshot.cn/v1/users/me/balance` | available balance |
-| `siliconflow` | balance | `GET https://api.siliconflow.cn/v1/user/info` | total balance |
-| `novita` | balance | `GET https://api.novita.ai/v3/user/balance` | available balance |
-| `stepfun` | balance | `GET https://api.stepfun.com/v1/accounts` | account balance |
-| *any other route with a `baseURL`* | balance | `/api/user/self`, `/v1/usage`, `/api/usage`, `/user/balance` (tried in turn) | New API / one-api, sub2api and plain-balance relays |
+| `deepseek-official`、`deepseek` | 余额 | `GET https://api.deepseek.com/user/balance` | 分币种的余额 |
+| `deepseek-account` | 余额 | `ctx.deepseekAccount.getBalance()` | 已登录账户的钱包余额，不需要 API Key |
+| `anthropic` | 额度窗口 | `GET https://api.anthropic.com/api/oauth/usage` | 5 小时、7 天与模型专属周限 |
+| `openai-codex` | 额度窗口 + Credits | `GET https://chatgpt.com/backend-api/wham/usage` | 5 小时 / 每周窗口、Codex Credits |
+| `kimi-coding` | 额度窗口 | `GET https://api.kimi.com/coding/v1/usages` | 5 小时与每周窗口 |
+| `zai-coding-cn`、`zai` | 额度窗口 | `GET https://open.bigmodel.cn/api/monitor/usage/quota/limit` | 5 小时与每周窗口；按量付费账户回落查账户余额 |
+| `minimax-cn`、`minimax` | 额度窗口 | `GET https://api.minimaxi.com/v1/api/openplatform/coding_plan/remains` | 5 小时与每周窗口 |
+| `opencode-go` | 额度窗口 | `GET https://opencode.ai/zen/go/v1/usage` | 滚动、每周与每月窗口 |
+| `github-copilot` | 额度 | `GET https://api.github.com/copilot_internal/user` | 高级交互额度 |
+| `openrouter` | 余额 | `GET https://openrouter.ai/api/v1/credits` | 已用 / 总额度 |
+| `moonshotai-cn`、`moonshotai` | 余额 | `GET https://api.moonshot.cn/v1/users/me/balance` | 可用余额 |
+| `siliconflow` | 余额 | `GET https://api.siliconflow.cn/v1/user/info` | 总余额 |
+| `novita` | 余额 | `GET https://api.novita.ai/v3/user/balance` | 可用余额 |
+| `stepfun` | 余额 | `GET https://api.stepfun.com/v1/accounts` | 账户余额 |
+| *任何其它带 `baseURL` 的路由* | 余额 | 依次试 `/api/user/self`、`/v1/usage`、`/api/usage`、`/user/balance` | New API / one-api、sub2api 与通用余额中转站 |
 
-### Credential references
+### 凭据引用名
 
-The plugin asks the harness for the key the route already uses, so most providers need **no
-configuration at all**. The reference names it looks for:
+插件直接向 harness 要该路由**本来就在用的那把 key**，所以多数供应商**完全不用配置**。
+它会找的引用名：
 
-| Route | Credential reference |
+| 路由 | 凭据引用 |
 |---|---|
 | `deepseek-official` | `DEEPSEEK_API_KEY` |
-| `anthropic` | `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_OAUTH_TOKEN` |
-| `openai-codex` | `OPENAI_CODEX_ACCESS_TOKEN`, `CHATGPT_ACCESS_TOKEN`, `CODEX_ACCESS_TOKEN` |
-| `kimi-coding` | `KIMI_API_KEY`, `KIMI_CODING_API_KEY` |
-| `zai-coding-cn`, `zai` | `ZAI_CODING_CN_API_KEY`, `ZAI_API_KEY`, `ZHIPU_API_KEY` |
-| `minimax-cn` | `MINIMAX_CN_API_KEY`, `MINIMAX_API_KEY` |
+| `anthropic` | `ANTHROPIC_API_KEY`、`ANTHROPIC_AUTH_TOKEN`、`ANTHROPIC_OAUTH_TOKEN` |
+| `openai-codex` | `OPENAI_CODEX_ACCESS_TOKEN`、`CHATGPT_ACCESS_TOKEN`、`CODEX_ACCESS_TOKEN` |
+| `kimi-coding` | `KIMI_API_KEY`、`KIMI_CODING_API_KEY` |
+| `zai-coding-cn`、`zai` | `ZAI_CODING_CN_API_KEY`、`ZAI_API_KEY`、`ZHIPU_API_KEY` |
+| `minimax-cn` | `MINIMAX_CN_API_KEY`、`MINIMAX_API_KEY` |
 | `opencode-go` | `OPENCODE_API_KEY` |
-| `github-copilot` | `COPILOT_GITHUB_TOKEN`, `GITHUB_TOKEN` |
+| `github-copilot` | `COPILOT_GITHUB_TOKEN`、`GITHUB_TOKEN` |
 | `openrouter` | `OPENROUTER_API_KEY` |
-| `moonshotai-cn`, `moonshotai` | `MOONSHOT_API_KEY` |
+| `moonshotai-cn`、`moonshotai` | `MOONSHOT_API_KEY` |
 | `siliconflow` | `SILICONFLOW_API_KEY` |
 | `novita` | `NOVITA_API_KEY` |
 | `stepfun` | `STEPFUN_API_KEY` |
 
-The reference a route actually uses comes from the provider's own profile (`apiKeyEnv` in
-`dsh-llm-pi-ai`'s `providers.<route>`), so a route configured with a custom reference name is
-honoured too. A reference is resolved on every query: add a key in **Settings → Models** and
-the next query uses it, without a restart.
+路由实际用的引用名来自它自己的配置（`dsh-llm-pi-ai` 的 `providers.<route>.apiKeyEnv`），
+所以用户自定义过引用名的路由同样认得。凭据**每次查询都重新解析**：在
+「设置 → 模型」里填好 key，下一次查询就用上了，不用重启。
 
-### Providers that need more than an API key
+### 不止要 API Key 的供应商
 
-Three endpoints do **not** accept a plain API key:
+有三个接口**不接受普通 API Key**：
 
-- **Claude** (`anthropic`) — `/api/oauth/usage` wants an **OAuth access token**, not an
-  `ANTHROPIC_API_KEY`. With an API key the query returns 401.
-- **ChatGPT / Codex** (`openai-codex`) — `wham/usage` wants the **OAuth access token** of a
-  ChatGPT subscription.
-- **GitHub Copilot** (`github-copilot`) — `copilot_internal/user` wants a **GitHub OAuth
-  token** (`Authorization: token …`, not `Bearer …`).
+- **Claude**（`anthropic`）—— `/api/oauth/usage` 要的是 **OAuth access token**，
+  不是 `ANTHROPIC_API_KEY`。拿 API Key 去查会 401。
+- **ChatGPT / Codex**（`openai-codex`）—— `wham/usage` 要 ChatGPT 订阅的
+  **OAuth access token**。
+- **GitHub Copilot**（`github-copilot`）—— `copilot_internal/user` 要 **GitHub OAuth
+  token**（`Authorization: token …`，不是 `Bearer …`）。
 
-The plugin reports the upstream error verbatim in those cases, so a 401 always means "wrong
-credential kind", not "plugin bug".
+这些情况下插件会把上游错误原样显示出来，所以 401 一定意味着「凭据类型不对」，
+而不是插件坏了。
 
-## Configuration
+## 配置
 
-Everything works out of the box. A trusted profile can tune the plugin in its bundle patch —
-`~/.dsh/profiles/<profile>/cordis.patch.yml` — by **overriding the bundle's row by id**
-(the package's own bundle patch already inserts it; a second `insert` of the same id fails the
-boot with `duplicate loader entry id`):
+开箱即用。可信的 profile 可以在自己的 bundle patch 里调——
+`~/.dsh/profiles/<profile>/cordis.patch.yml`——**按 id 覆盖 bundle 插的那一行**
+（本包的 bundle patch 已经插好了；再 `insert` 一个同 id 的行会让启动直接失败：
+`duplicate loader entry id`）：
 
 ```yaml
 - id: usage-hub
@@ -190,136 +184,127 @@ boot with `duplicate loader entry id`):
     maxSessions: 100
 ```
 
-| Field | Type | Default | Meaning |
+| 字段 | 类型 | 默认值 | 含义 |
 |---|---|---|---|
-| `keyRefs` | `string[]` | `[]` | Extra credential references tried for every provider, after the provider's own |
-| `maxSessions` | `number` | `50` | How many sessions the cross-session aggregation replays |
-| `usageCacheMs` | `number` | `30000` | Cache lifetime of the aggregated totals (ms) |
-| `requestTimeoutMs` | `number` | `15000` | Per-request timeout for a usage query (ms) |
-| `diagnostics` | `boolean` | `false` | Write a local diagnostic log |
-| `diagnosticsPath` | `string` | `""` | Where to write it; empty means the system temp directory |
+| `keyRefs` | `string[]` | `[]` | 所有供应商都会额外尝试的凭据引用名（排在各自候选之后） |
+| `maxSessions` | `number` | `50` | 跨会话聚合最多回放多少个会话 |
+| `usageCacheMs` | `number` | `30000` | 聚合结果的缓存时长（毫秒） |
+| `requestTimeoutMs` | `number` | `15000` | 单次用量查询的超时（毫秒） |
+| `diagnostics` | `boolean` | `false` | 是否写本地诊断日志 |
+| `diagnosticsPath` | `string` | `""` | 诊断日志路径；留空写到系统临时目录 |
 
-## How it works
+## 工作原理
 
 ```
-browser                                   host
-──────                                   ────
-session.projections "modelSelection" ──▶  resolve the provider route
-                                             │
-                                             ├─ route id  → adapter
-                                             ├─ base URL  → adapter
-                                             └─ otherwise → relay adapter
-                                                   │
-                                        ctx.credentials.resolve(ref)
-                                                   │
-                                        GET the provider's usage endpoint
-                                                   │
-                              { tiers: [...], balances: [...] } ──▶ progress bars
+浏览器                                    宿主
+──────                                    ────
+会话投影 "modelSelection" ───────────▶  解析供应商路由
+                                              │
+                                              ├─ 路由 id  → 适配器
+                                              ├─ base URL → 适配器
+                                              └─ 其它      → 中转站适配器
+                                                     │
+                                          ctx.credentials.resolve(引用名)
+                                                     │
+                                          请求该供应商的用量接口
+                                                     │
+                              { tiers: [...], balances: [...] } ──▶ 进度条
 ```
 
-**Host half** (`lib/index.js`, `lib/providers.js`) registers one prefix route on the
-`webServer` service and serves three endpoints over the Connection RPC envelope:
+**宿主半边**（`lib/index.js`、`lib/providers.js`）在 `webServer` 服务上注册一条前缀路由，
+用 Connection 的 RPC 信封提供三个端点：
 
-| Endpoint | Answers |
+| 端点 | 回答什么 |
 |---|---|
-| `quota` | quota windows / balances for the current provider (or the one named in the payload) |
-| `providers` | the provider directory: label, credential reference, credential state |
-| `usage` | cross-session token totals, aggregated by model |
+| `quota` | 当前供应商（或载荷里指定的那个）的额度窗口 / 余额 |
+| `providers` | 供应商清单：名称、凭据引用名、凭据状态 |
+| `usage` | 跨会话 token 合计，按模型聚合 |
 
-The route is registered on the `webServer` service directly rather than through
-`ctx.connection.rpc.handle()`, because on newer DSH releases the latter is not available to
-third-party plugins: its disposal callback reads `owner.webServer`, which resolves to
-Connection's own fiber and never has a `webServer` — the channel then vanishes silently, with
-a quiet startup log. The plugin performs the Host/Origin and browser-session trust check itself
-with `ctx.connection.admit(req)`.
+路由直接注册在 `webServer` 服务上，而不是走 `ctx.connection.rpc.handle()`——因为在较新的
+DSH 上后者对第三方插件已经不可用：它的销毁回调会读 `owner.webServer`，而那个 owner 解析到
+Connection 插件自己的 fiber，那里永远没有 `webServer`，于是通道凭空消失、启动日志却一片
+安静。插件自己用 `ctx.connection.admit(req)` 做 Host/Origin 与浏览器会话的信任判定。
 
-**Client half** (`lib/client.js`) is a plain `window.__ModuleLoader__.load({ id, factory })`
-bundle. It registers three slots:
+**浏览器半边**（`lib/client.js`）是一个 `window.__ModuleLoader__.load({ id, factory })`
+格式的 bundle，注册三个插槽：
 
-| Slot | Shows |
+| 插槽 | 显示什么 |
 |---|---|
-| `shell.bottom` | the current provider's summary and this session's token total |
-| `main` | the two-tab page (panel id `usage-hub`) |
-| `conversation.session.header.utilities` | captures the `tokenUsage` and `modelSelection` projections |
+| `shell.bottom` | 当前供应商的摘要与本会话 token 小计 |
+| `main` | 两页签整页（面板 id `usage-hub`） |
+| `conversation.session.header.utilities` | 捕获 `tokenUsage` 与 `modelSelection` 投影 |
 
-The page is its own scroll container: DSH's centre column is `overflow: hidden`, so a main
-panel has to provide the scrolling itself.
+整页自带滚动容器：DSH 的中列是 `overflow: hidden`，主面板必须自己提供滚动。
 
-## Security
+## 安全
 
-- Credential **values** are resolved inside the host process and never leave it. Responses
-  carry normalized numbers plus the credential *reference name*.
-- Every request is admitted through `ctx.connection.admit(req)`, so the browser session and
-  the Host/Origin check are enforced before anything is answered.
-- The plugin uploads nothing. Usage requests go from the host straight to the provider API.
-- The diagnostic log is off by default and never contains credential values.
+- 凭据**值**只在宿主进程内解析，绝不外传；响应里只有归一化后的数字与凭据**引用名**。
+- 每个请求都先过 `ctx.connection.admit(req)`，浏览器会话与 Host/Origin 校验都在应答前完成。
+- 插件不上传任何数据；用量请求由宿主直接发往供应商接口。
+- 诊断日志默认关闭，且从不写入凭据值。
 
-## Compatibility
+## 兼容性
 
-- DeepSeek Harness `>=0.2.1-rc.1` with the Web surface; Node.js `>=20`.
-- The plugin uses DSH internals — the slot system, the `tokenUsage` and `modelSelection`
-  session projections, `ctx.agentDefaultModel`, `ctx.llm.listConfigurableProviders()`,
-  `ctx.configEditor.configuration()`, `ctx.credentials` and the Connection RPC envelope.
-  These are not a public API and may change between harness releases.
-- Every optional service is resolved through `ctx.get()` when it is used, so the plugin still
-  mounts where one of them is absent or activates later. `webServer` and `connection` are the
-  only hard dependencies.
-- `engines.dsh` declares an open lower bound on purpose: a narrow `^` range would make the
-  plugin get skipped as `skipping profile bundle` on every harness minor release.
+- DeepSeek Harness `>=0.2.1-rc.1`（带 Web 界面）；Node.js `>=20`。
+- 插件用到 DSH 内部接口——插槽系统、`tokenUsage` 与 `modelSelection` 会话投影、
+  `ctx.agentDefaultModel`、`ctx.llm.listConfigurableProviders()`、
+  `ctx.configEditor.configuration()`、`ctx.credentials` 与 Connection 的 RPC 信封。
+  这些都不是公开 API，harness 升级后可能变化。
+- 可选服务一律用 `ctx.get()` 按需获取，所以某个服务缺失或稍后才激活时插件仍能挂载。
+  硬依赖只有 `webServer` 与 `connection`。
+- `engines.dsh` 特意声明**开放的下界**：写成窄的 `^` 区间会让插件在每次 harness 小版本
+  升级后都被判定为 `skipping profile bundle` 而跳过安装。
 
-## Not supported (and why)
+## 不支持的部分（以及原因）
 
-- **Grok / xAI** — the credits endpoint is a gRPC-web protobuf binary with no public schema.
-- **Antigravity / Gemini** — the quota endpoint requires a specific `User-Agent` and a Google
-  OAuth grant the harness does not hold.
-- **Alibaba Qwen Token Plan, Xiaomi Token Plan** — no public usage endpoint; the vendors have
-  not documented one, and the cc-switch project does not implement one either.
-- **Mistral, Groq, plain `api.x.ai`, OpenCode Zen (pay-as-you-go)** — no usage or balance API.
+- **Grok / xAI** —— 额度接口是 gRPC-web 二进制 protobuf，没有公开 schema。
+- **Antigravity / Gemini** —— 额度接口要求特定 `User-Agent`，还需要 harness 并不持有的
+  Google OAuth 授权。
+- **阿里千问 Token Plan、小米 Token Plan** —— 厂商没有公开用量接口，cc-switch 项目
+  同样没有实现。
+- **Mistral、Groq、纯 `api.x.ai`、OpenCode Zen（按量付费）** —— 没有用量 / 余额接口。
 
-Adding a provider means adding one adapter to `lib/providers.js`: declare the endpoint, the
-auth header and how to read the response. Nothing else changes.
+新增一家供应商只要在 `lib/providers.js` 里加一个适配器：声明接口、鉴权头与响应解析方式，
+其它地方不用动。
 
-## Development
+## 开发
 
 ```sh
-npm test          # host-side unit tests + client-side render checks
-npm run verify    # the same suite; also runs from prepublishOnly
+npm test          # 宿主半边单元测试 + 浏览器半边渲染检查
+npm run verify    # 同一套检查；prepublishOnly 也会跑
 ```
 
-| Script | What it covers |
+| 脚本 | 覆盖什么 |
 |---|---|
-| `tools/smoke-test.mjs` | every response parser, the provider registry and the session-log aggregation — no harness needed |
-| `tools/client-check.mjs` | mounts the client bundle in a minimal DOM/React stand-in and renders the page: locale keys, the two tabs, the scroll container |
+| `tools/smoke-test.mjs` | 各家响应解析器、供应商注册表、会话日志聚合——不需要 harness |
+| `tools/client-check.mjs` | 用最小 DOM / React 替身挂载客户端 bundle 并渲染整页：文案键、两个页签、滚动容器 |
 
-The plugin has **no build step**. `lib/client.js` already is the bundle format DSH expects,
-so a change shows up after a page reload. A host-side change needs the plugin restarted (or
-toggled off and on in the plugin manager).
+插件**没有构建步骤**。`lib/client.js` 本身就是 DSH 期望的 bundle 格式，改完刷新页面即生效；
+改宿主半边需要重启插件（或在插件管理器里关掉再打开）。
 
-### Layout
+### 目录结构
 
 ```
-package.json        manifest: dsh.bundle / dsh.client declarations, engines, npm metadata
-cordis.patch.yml    bundle patch: inserts the plugin row into a profile
-icon.svg            plugin icon
-locale/             plugin title and description (zh / en)
-lib/index.js        host half: the RPC route, provider routing, credential resolution
-lib/providers.js    adapters: provider recognition, request building, response parsing
-lib/client.js       client half: status bar, the two-tab page, session capture
-tools/              the test scripts (published)
-tools/local/        the author's private debugging tools (not published)
+package.json        清单：dsh.bundle / dsh.client 声明、版本约束、npm 元信息
+cordis.patch.yml    bundle patch：把插件行插进 profile
+icon.svg            插件图标
+locale/             插件标题与描述（zh / en）
+lib/index.js        宿主半边：RPC 路由、供应商路由、凭据解析
+lib/providers.js    适配层：供应商识别、请求拼装、响应解析
+lib/client.js       浏览器半边：状态栏、两页签整页、会话捕获
+tools/              测试脚本（随包发布）
+tools/local/        作者自用的本机调试工具（不发布）
 ```
 
-## Credits
+## 致谢
 
-- The provider endpoints and their response shapes were researched against
-  [cc-switch](https://github.com/farion1231/cc-switch) — in particular
-  `src-tauri/src/services/coding_plan.rs`, `balance.rs`, `subscription.rs` and
-  `proxy/providers/copilot_auth.rs`. This plugin is an independent implementation; the
-  interface knowledge comes from there.
-- The harness, its slot system and its session projections are the work of
-  [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness).
+- 各家用量接口与响应形态的调研参考了 [cc-switch](https://github.com/farion1231/cc-switch)
+  —— 主要是 `src-tauri/src/services/coding_plan.rs`、`balance.rs`、`subscription.rs`
+  与 `proxy/providers/copilot_auth.rs`。本插件是独立实现，接口知识来自那里。
+- harness、插槽系统与会话投影都出自
+  [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)。
 
-## License
+## 许可
 
-MIT — see [LICENSE](./LICENSE). DeepSeek Harness is MIT-licensed as well. This is an
-independent community plugin and is not affiliated with or endorsed by DeepSeek.
+MIT，见 [LICENSE](./LICENSE)。DeepSeek Harness 同样以 MIT 许可发布。本项目为独立社区插件，
+与深度求索公司无隶属或背书关系。
