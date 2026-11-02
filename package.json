@@ -52,10 +52,11 @@
     "lib/client.js",
     "cordis.patch.yml",
     "icon.svg",
+    "assets/icon-180.png",
     "locale",
     "LICENSE",
     "README.md",
-    "README.zh-CN.md",
+    "README.EN.md",
     "CHANGELOG.md"
   ],
   "scripts": {
