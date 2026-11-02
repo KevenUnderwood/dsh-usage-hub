@@ -57,7 +57,9 @@
     "LICENSE",
     "README.md",
     "README.EN.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "tools/smoke-test.mjs",
+    "tools/client-check.mjs"
   ],
   "scripts": {
     "test": "node tools/smoke-test.mjs && node tools/client-check.mjs",
