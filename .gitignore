@@ -7,3 +7,6 @@ tools/local/
 
 # 本地调试时解包 DSH 用的临时产物（不是插件的一部分）
 tools/local/asar-extract/
+
+# 本机文件权限诊断脚本留下的备份目录（不是插件的一部分）
+.acl-recovery/

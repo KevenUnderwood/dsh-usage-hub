@@ -77,6 +77,13 @@ The provider directory lives on **its own tab**, so it never gets mixed into the
 - **Credential state, not credential values.** The provider tab shows which credential
   *reference* each provider uses and whether it resolves — never the key itself.
 - **Cross-session token totals** aggregated by model, replayed from the session log.
+- **Its own settings page.** The Usage page carries a gear button in its header; clicking it opens
+  this plugin's settings, which are written straight back to the plugin's profile row — no YAML
+  editing, no restart.
+- **Configurable refresh interval.** Pick 5 seconds / 60 seconds / 10 minutes / 30 minutes /
+  1 hour in the settings; the change takes effect at once.
+- **A clean status bar.** The bar at the bottom of the window shows quota and usage only — no
+  refresh button; turn "Show quick refresh button" on in the settings if you want it back.
 - **Bilingual UI** (中文 / English), following the harness language.
 - **Zero runtime dependencies.** The host half uses Node built-ins only; `schemastery` is an
   optional peer used solely for the config schema, and the plugin loads without it.
@@ -177,27 +184,34 @@ credential kind", not "plugin bug".
 
 ## Configuration
 
-Everything works out of the box. A trusted profile can tune the plugin in its bundle patch —
-`~/.dsh/profiles/<profile>/cordis.patch.yml` — by **overriding the bundle's row by id**
-(the package's own bundle patch already inserts it; a second `insert` of the same id fails the
-boot with `duplicate loader entry id`):
+Everything works out of the box. **The settings live behind the gear button** in the Usage
+page's header: the page edits the plugin's own profile row
+(`~/.dsh/profiles/<profile>/cordis.patch.yml`, the `config:` of the `id: usage-hub` entry), so
+there is no YAML to write by hand and no restart to perform — the field is marked volatile on
+the host side, which means the plugin receives it as a live reference and sees the new value
+immediately.
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `refreshIntervalMs` | `number` | `600000` | Auto refresh interval (ms); only five steps are accepted — `5000` / `60000` / `600000` / `1800000` / `3600000` |
+| `showQuickRefresh` | `boolean` | `false` | Whether the status bar at the bottom of the window carries a quick refresh button |
+
+Those are the only two settings. Everything else is fixed: the cross-session aggregation replays at
+most 50 sessions, the aggregated totals are cached for 30 seconds, and a usage query times
+out after 15 seconds.
+
+Without the Web settings service (a host-only deployment), the plugin still works; the values
+then have to be written by hand, by **overriding the bundle's row by id** (the package's own
+bundle patch already inserts it; a second `insert` of the same id fails the boot with
+`duplicate loader entry id`):
 
 ```yaml
 - id: usage-hub
   name: dsh-usage-hub
   config:
-    requestTimeoutMs: 20000
-    maxSessions: 100
+    refreshIntervalMs: 600000
+    showQuickRefresh: false
 ```
-
-| Field | Type | Default | Meaning |
-|---|---|---|---|
-| `keyRefs` | `string[]` | `[]` | Extra credential references tried for every provider, after the provider's own |
-| `maxSessions` | `number` | `50` | How many sessions the cross-session aggregation replays |
-| `usageCacheMs` | `number` | `30000` | Cache lifetime of the aggregated totals (ms) |
-| `requestTimeoutMs` | `number` | `15000` | Per-request timeout for a usage query (ms) |
-| `diagnostics` | `boolean` | `false` | Write a local diagnostic log |
-| `diagnosticsPath` | `string` | `""` | Where to write it; empty means the system temp directory |
 
 ## How it works
 
@@ -234,16 +248,24 @@ a quiet startup log. The plugin performs the Host/Origin and browser-session tru
 with `ctx.connection.admit(req)`.
 
 **Client half** (`lib/client.js`) is a plain `window.__ModuleLoader__.load({ id, factory })`
-bundle. It registers three slots:
+bundle. It registers four slots:
 
 | Slot | Shows |
 |---|---|
 | `shell.bottom` | the current provider's summary and this session's token total |
 | `main` | the two-tab page (panel id `usage-hub`) |
+| `main` | the settings page (panel id `usage-hub-settings`, reachable from the gear only, not in the sidebar) |
 | `conversation.session.header.utilities` | captures the `tokenUsage` and `modelSelection` projections |
 
 The page is its own scroll container: DSH's centre column is `overflow: hidden`, so a main
 panel has to provide the scrolling itself.
+
+The settings page talks to DSH's configuration form service: the browser reads and writes the
+plugin's own Config through `ctx.configForms.get("usage-hub")` (`ctx.configForms` is an
+**optional** service — without it the page says so instead of failing). On the host side the
+six fields are marked `.volatile()`, because DSH only turns volatile fields into editable
+forms, and because such fields reach the plugin as live references: the host swaps the value
+in place, so the plugin sees the change without being remounted.
 
 ## Security
 
