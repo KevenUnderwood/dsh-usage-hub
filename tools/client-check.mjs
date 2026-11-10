@@ -148,12 +148,14 @@ let mutateMode = "ok";
 /** 假配置表单的当前值。 */
 const fakeValue = {
   refreshIntervalMs: 5000,
-  showQuickRefresh: false
+  showQuickRefresh: false,
+  tokenDisplay: "compact"
 };
 /** 假配置服务报的 schema 字段：宿主进程重启后才会更新。 */
 let fakeSchemaProperties = {
   refreshIntervalMs: { type: "number" },
-  showQuickRefresh: { type: "boolean" }
+  showQuickRefresh: { type: "boolean" },
+  tokenDisplay: { type: "string" }
 };
 /** 假配置表单控制器。 */
 const fakeForm = {
@@ -490,10 +492,12 @@ check("设置页出现「返回用量」", requested.has("backToUsage"));
 
 const fieldNodes = findAll(settingsTree, (node) => typeof node.props["data-field"] === "string");
 const fieldNames = fieldNodes.map((node) => node.props["data-field"]);
-check("设置页渲染两个字段", fieldNames.length === 2, `实际 ${fieldNames.length}：${fieldNames.join(",")}`);
+check("设置页渲染三个字段", fieldNames.length === 3, `实际 ${fieldNames.length}：${fieldNames.join(",")}`);
 check(
-  "设置页的字段是 refreshIntervalMs 和 showQuickRefresh",
-  fieldNames.includes("refreshIntervalMs") && fieldNames.includes("showQuickRefresh"),
+  "设置页的字段是 refreshIntervalMs、showQuickRefresh 和 tokenDisplay",
+  fieldNames.includes("refreshIntervalMs") &&
+    fieldNames.includes("showQuickRefresh") &&
+    fieldNames.includes("tokenDisplay"),
   fieldNames.join(",")
 );
 
@@ -560,6 +564,22 @@ check(
   "失焦会收起下拉框",
   stateSetterCalls.length === setterBefore + 2 && stateSetterCalls.at(-1) === undefined,
   JSON.stringify(stateSetterCalls.slice(setterBefore))
+);
+
+/* token 写法也是一个下拉框，两种写法：完整与紧凑。 */
+
+const tokenField = fieldNodes.find((node) => node.props["data-field"] === "tokenDisplay");
+check("token 写法字段是下拉框", tokenField?.type === "select", `实际 ${tokenField?.type}`);
+const tokenOptions = (tokenField?.props?.children ?? []).map((option) => option.props.value);
+check(
+  "token 写法有完整与紧凑两个选项",
+  tokenOptions.join(",") === "full,compact",
+  tokenOptions.join(",")
+);
+check(
+  "token 写法的下拉框显示当前值",
+  tokenField?.props?.value === "compact",
+  `实际 ${tokenField?.props?.value}`
 );
 
 const saveButton = findAll(
@@ -696,7 +716,42 @@ check(
   String(rejectedDetail?.props?.children ?? "")
 );
 mutateMode = "ok";
-fakeSchemaProperties = { refreshIntervalMs: { type: "number" }, showQuickRefresh: { type: "boolean" } };
+fakeSchemaProperties = { refreshIntervalMs: { type: "number" }, showQuickRefresh: { type: "boolean" }, tokenDisplay: { type: "string" } };
+
+/* 改 token 写法再保存：应该发出 tokenDisplay 的 set。 */
+
+let tokenTree;
+try {
+  tokenTree = settingsComponent(settingsProps);
+} catch (error) {
+  settingsError = error;
+}
+const tokenField2 = findAll(
+  tokenTree,
+  (node) => node.props["data-field"] === "tokenDisplay"
+)[0];
+tokenField2?.props?.onChange?.({ target: { value: "full" } });
+
+let tokenTree2;
+try {
+  tokenTree2 = settingsComponent(settingsProps);
+} catch (error) {
+  settingsError = error;
+}
+check("改 token 写法后重渲染不抛异常", settingsError === undefined, settingsError?.stack ?? "");
+
+const saveButton7 = findAll(
+  tokenTree2,
+  (node) => node.type === "button" && node.props.children === dicts.zh.save
+)[0];
+await saveButton7.props.onClick();
+
+const tokenOps = mutateCalls.at(-1)?.ops ?? [];
+check(
+  "保存的 ops 包含 tokenDisplay",
+  tokenOps.some((op) => op.op === "set" && op.path[0] === "tokenDisplay" && op.value === "full"),
+  JSON.stringify(tokenOps)
+);
 
 /* 定时器用的是配置里的刷新间隔。 */
 
@@ -884,6 +939,81 @@ try {
 }
 check("配置改回关闭后状态栏没有按钮", requested.has("refresh") === false, `用到了 ${[...requested].join(",")}`);
 
+/* 状态栏里当前会话的 token 数：紧凑写 120K，完整写 120,000。 */
+
+/**
+ * 取状态栏里当前会话 token 数那一格的文本。
+ *
+ * @param {unknown} tree - 状态栏渲染出来的树。
+ * @returns 文本。
+ */
+function sessionTextOf(tree) {
+  const node = findAll(tree, (item) => item.props?.key === "session-value")[0];
+  return String(node?.props?.children ?? "");
+}
+
+/** 一份 token 数够大的快照：120000 便于区分 120K 与 120,000。 */
+const bigSnapshot = {
+  ...snapshot,
+  session: {
+    ...snapshot.session,
+    usage: { uncachedInputTokens: 120000, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0 }
+  }
+};
+
+let compactTree;
+try {
+  compactTree = bar.component({
+    t: ctx.locale.bind(),
+    ...shared,
+    useAccountUsage: (selector) => selector(bigSnapshot)
+  });
+} catch (error) {
+  barError = error;
+}
+check("状态栏默认用紧凑写法", sessionTextOf(compactTree) === "120K token", sessionTextOf(compactTree));
+
+let fullTree;
+try {
+  fullTree = bar.component({
+    t: ctx.locale.bind(),
+    ...shared,
+    useAccountUsage: (selector) => selector({ ...bigSnapshot, tokenDisplay: "full" })
+  });
+} catch (error) {
+  barError = error;
+}
+check("配置为完整时状态栏写完整数字", sessionTextOf(fullTree) === "120,000 token", sessionTextOf(fullTree));
+
+/* 端到端：配置里的写法改掉 → mirror 通知 → store 里的写法跟着变。 */
+
+fakeValue.tokenDisplay = "full";
+mirrorListener?.();
+let e2eState;
+try {
+  e2eState = realShared.useAccountUsage((state) => state);
+} catch (error) {
+  barError = error;
+}
+check(
+  "配置改成完整后 store 里的写法跟着变",
+  e2eState?.tokenDisplay === "full",
+  String(e2eState?.tokenDisplay)
+);
+
+fakeValue.tokenDisplay = "compact";
+mirrorListener?.();
+try {
+  e2eState = realShared.useAccountUsage((state) => state);
+} catch (error) {
+  barError = error;
+}
+check(
+  "配置改回紧凑后 store 里的写法跟着变",
+  e2eState?.tokenDisplay === "compact",
+  String(e2eState?.tokenDisplay)
+);
+
 /* 宿主侧的配置 schema：这个字段必须标成 volatile，否则 Web 设置页读写不到它
    （宿主只把 volatile 字段做成可写表单）。本地没装 schemastery，只能查源码。 */
 
@@ -892,6 +1022,11 @@ check(
   "showQuickRefresh 在宿主 schema 里标成了 volatile",
   /showQuickRefresh:[^,\n]*volatile\(\)/.test(indexSource),
   "lib/index.js 的 schema 里没有 volatile 的 showQuickRefresh"
+);
+check(
+  "tokenDisplay 在宿主 schema 里标成了 volatile",
+  /tokenDisplay:[^,\n]*volatile\(\)/.test(indexSource),
+  "lib/index.js 的 schema 里没有 volatile 的 tokenDisplay"
 );
 
 console.log(failures === 0 ? "\n全部通过" : `\n${failures} 个用例失败`);

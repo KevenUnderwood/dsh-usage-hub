@@ -25,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The quick refresh button is now a setting.** `showQuickRefresh` (off by default)
   decides whether the status bar at the bottom of the window carries a refresh button.
   Like the interval, it is marked `.volatile()` and takes effect immediately.
+- **The token count in the status bar can be spelled out.** The new `tokenDisplay`
+  setting (`compact` by default) picks between the abbreviated `120.0K token` and the
+  full `120,000 token` for the current session's count in the status bar.
 
 ### Changed
 
@@ -34,8 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A failed save says why.** The settings page used to swallow the host's error and
   show a bare "Save failed"; it now shows the host's own message underneath, and adds a
   "restart DSH" hint when the field is not one the running host knows about yet.
-- **Two settings are left.** The auto refresh interval and the quick refresh button are
-  the plugin's only configuration options. `keyRefs`, `maxSessions`, `usageCacheMs`,
+- **Three settings are left.** The auto refresh interval, the quick refresh button and the
+  status bar's token spelling are the plugin's only configuration options. `keyRefs`,
+  `maxSessions`, `usageCacheMs`,
   `requestTimeoutMs`, `diagnostics` and `diagnosticsPath` are gone; their behaviour is
   now a fixed constant (50 sessions replayed, 30 s aggregation cache, 15 s query
   timeout). The diagnostic log stays in the code but is off — flip `DIAGNOSTICS` in
