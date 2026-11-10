@@ -75,6 +75,11 @@
 - **只显示凭据状态，不显示凭据本身**：供应商页列出每个供应商用的**凭据引用名**
   与它能否解析成功，绝不显示 key。
 - **跨会话 token 汇总**，按模型聚合，从会话日志回放得出。
+- **自带设置页**：「用量与额度」页右上角有一个齿轮，点进去就是本插件的设置页；
+  改完直接写回 profile 里的本插件条目，**不需要手改 YAML、不需要重启插件**。
+- **刷新间隔可配**：设置页里选 5 秒 / 60 秒 / 10 分钟 / 30 分钟 / 1 小时，改完立刻生效。
+- **状态栏保持清爽**：窗口左下角默认只显示额度与用量，不放刷新按钮；想要的话在设置页
+  打开「显示快捷刷新按钮」。
 - **中英双语界面**，跟随 harness 的语言设置。
 - **零运行时依赖**：宿主半边只用 Node 内置能力；`schemastery` 是可选 peer，
   仅用于配置 schema，缺了插件照样能装。
@@ -171,27 +176,32 @@ dsh plugin --profile web add ./dsh-usage-hub
 
 ## 配置
 
-开箱即用。可信的 profile 可以在自己的 bundle patch 里调——
-`~/.dsh/profiles/<profile>/cordis.patch.yml`——**按 id 覆盖 bundle 插的那一行**
-（本包的 bundle patch 已经插好了；再 `insert` 一个同 id 的行会让启动直接失败：
-`duplicate loader entry id`）：
+开箱即用。**设置在「用量与额度」页右上角的齿轮里**——点开就是本插件的设置页，
+保存后直接写回 profile 里本插件的那一条（`~/.dsh/profiles/<profile>/cordis.patch.yml`
+里 `id: usage-hub` 的 `config:`），**不用手改 YAML，也不用重启插件**：这个字段在
+宿主侧标成了 volatile，值是一个「活引用」，改完立刻生效。
+
+| 字段 | 类型 | 默认值 | 含义 |
+|---|---|---|---|
+| `refreshIntervalMs` | `number` | `600000` | 自动刷新间隔（毫秒）；只接受 `5000` / `60000` / `600000` / `1800000` / `3600000` 五档 |
+| `showQuickRefresh` | `boolean` | `false` | 是否在窗口左下角的状态栏里显示快捷刷新按钮 |
+
+只有这两个配置项。其余行为都是固定值：跨会话聚合最多回放 50 个会话、聚合结果
+缓存 30 秒、单次用量查询超时 15 秒。
+
+没有 Web 设置服务（比如只跑宿主、没挂设置插件）时，插件照常工作，设置只能手改
+YAML：
 
 ```yaml
 - id: usage-hub
   name: dsh-usage-hub
   config:
-    requestTimeoutMs: 20000
-    maxSessions: 100
+    refreshIntervalMs: 600000
+    showQuickRefresh: false
 ```
 
-| 字段 | 类型 | 默认值 | 含义 |
-|---|---|---|---|
-| `keyRefs` | `string[]` | `[]` | 所有供应商都会额外尝试的凭据引用名（排在各自候选之后） |
-| `maxSessions` | `number` | `50` | 跨会话聚合最多回放多少个会话 |
-| `usageCacheMs` | `number` | `30000` | 聚合结果的缓存时长（毫秒） |
-| `requestTimeoutMs` | `number` | `15000` | 单次用量查询的超时（毫秒） |
-| `diagnostics` | `boolean` | `false` | 是否写本地诊断日志 |
-| `diagnosticsPath` | `string` | `""` | 诊断日志路径；留空写到系统临时目录 |
+> 本包的 bundle patch 已经插好了这一行；再 `insert` 一个同 id 的行会让启动直接失败：
+> `duplicate loader entry id`。
 
 ## 工作原理
 
@@ -226,15 +236,21 @@ Connection 插件自己的 fiber，那里永远没有 `webServer`，于是通道
 安静。插件自己用 `ctx.connection.admit(req)` 做 Host/Origin 与浏览器会话的信任判定。
 
 **浏览器半边**（`lib/client.js`）是一个 `window.__ModuleLoader__.load({ id, factory })`
-格式的 bundle，注册三个插槽：
+格式的 bundle，注册四个插槽：
 
 | 插槽 | 显示什么 |
 |---|---|
 | `shell.bottom` | 当前供应商的摘要与本会话 token 小计 |
 | `main` | 两页签整页（面板 id `usage-hub`） |
+| `main` | 设置页（面板 id `usage-hub-settings`，只从齿轮进入，不进侧边栏） |
 | `conversation.session.header.utilities` | 捕获 `tokenUsage` 与 `modelSelection` 投影 |
 
 整页自带滚动容器：DSH 的中列是 `overflow: hidden`，主面板必须自己提供滚动。
+
+设置页走 DSH 的配置表单服务：浏览器用 `ctx.configForms.get("usage-hub")` 读写本插件
+自己的 Config（`ctx.configForms` 是**可选**服务，拿不到就显示「设置不可用」）。
+宿主侧对应地把六个字段标成 `.volatile()`——DSH 只把 volatile 字段做成可写表单，
+而且这些字段交给插件时是「活引用」：宿主改配置时原地换值，插件不重启也能看到新值。
 
 ## 安全
 
