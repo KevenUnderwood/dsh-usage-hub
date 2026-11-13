@@ -84,6 +84,8 @@ The provider directory lives on **its own tab**, so it never gets mixed into the
   1 hour in the settings; the change takes effect at once.
 - **A clean status bar.** The bar at the bottom of the window shows quota and usage only — no
   refresh button; turn "Show quick refresh button" on in the settings if you want it back.
+- **The token count in the status bar can be spelled out.** Compact `120.0K tokens` or the full
+  `120,000 tokens`.
 - **Bilingual UI** (中文 / English), following the harness language.
 - **Zero runtime dependencies.** The host half uses Node built-ins only; `schemastery` is an
   optional peer used solely for the config schema, and the plugin loads without it.
@@ -195,8 +197,9 @@ immediately.
 |---|---|---|---|
 | `refreshIntervalMs` | `number` | `600000` | Auto refresh interval (ms); only five steps are accepted — `5000` / `60000` / `600000` / `1800000` / `3600000` |
 | `showQuickRefresh` | `boolean` | `false` | Whether the status bar at the bottom of the window carries a quick refresh button |
+| `tokenDisplay` | `string` | `compact` | How the current session's token count is written in the status bar: `compact` (`120.0K tokens`) or `full` (`120,000 tokens`) |
 
-Those are the only two settings. Everything else is fixed: the cross-session aggregation replays at
+Those are the only three settings. Everything else is fixed: the cross-session aggregation replays at
 most 50 sessions, the aggregated totals are cached for 30 seconds, and a usage query times
 out after 15 seconds.
 
@@ -211,6 +214,7 @@ bundle patch already inserts it; a second `insert` of the same id fails the boot
   config:
     refreshIntervalMs: 600000
     showQuickRefresh: false
+    tokenDisplay: compact
 ```
 
 ## How it works

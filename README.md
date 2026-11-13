@@ -80,6 +80,7 @@
 - **刷新间隔可配**：设置页里选 5 秒 / 60 秒 / 10 分钟 / 30 分钟 / 1 小时，改完立刻生效。
 - **状态栏保持清爽**：窗口左下角默认只显示额度与用量，不放刷新按钮；想要的话在设置页
   打开「显示快捷刷新按钮」。
+- **状态栏的 token 数可切换写法**：紧凑的 `120.0K token` 或完整的 `120,000 token`。
 - **中英双语界面**，跟随 harness 的语言设置。
 - **零运行时依赖**：宿主半边只用 Node 内置能力；`schemastery` 是可选 peer，
   仅用于配置 schema，缺了插件照样能装。
@@ -185,8 +186,9 @@ dsh plugin --profile web add ./dsh-usage-hub
 |---|---|---|---|
 | `refreshIntervalMs` | `number` | `600000` | 自动刷新间隔（毫秒）；只接受 `5000` / `60000` / `600000` / `1800000` / `3600000` 五档 |
 | `showQuickRefresh` | `boolean` | `false` | 是否在窗口左下角的状态栏里显示快捷刷新按钮 |
+| `tokenDisplay` | `string` | `compact` | 状态栏里当前会话 token 数的写法：`compact` 缩写（`120.0K token`），`full` 完整（`120,000 token`） |
 
-只有这两个配置项。其余行为都是固定值：跨会话聚合最多回放 50 个会话、聚合结果
+只有这三个配置项。其余行为都是固定值：跨会话聚合最多回放 50 个会话、聚合结果
 缓存 30 秒、单次用量查询超时 15 秒。
 
 没有 Web 设置服务（比如只跑宿主、没挂设置插件）时，插件照常工作，设置只能手改
@@ -198,6 +200,7 @@ YAML：
   config:
     refreshIntervalMs: 600000
     showQuickRefresh: false
+    tokenDisplay: compact
 ```
 
 > 本包的 bundle patch 已经插好了这一行；再 `insert` 一个同 id 的行会让启动直接失败：
