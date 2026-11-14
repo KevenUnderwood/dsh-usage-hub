@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-11-14
+
+The plugin's own settings page, a configurable refresh interval, a selectable
+token spelling in the status bar, and a refresh that no longer flickers the
+page — contributed by [@YangNaner](https://github.com/YangNaner) in PR #2 and
+PR #3.
+
 ### Added
 
 - **Configurable auto refresh.** The hard-coded 10-minute poll is now the
@@ -56,6 +63,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The settings page has a single Save button.** "Reset to defaults" is gone, and the
   Save button uses the requested dark-grey look (`#43454a` fill, `#555658` border, white
   text).
+
+### Credits
+
+- [@YangNaner](https://github.com/YangNaner) — the settings page, the configurable
+  refresh interval and the refresh-jitter fix (PR #2), and the status bar's
+  selectable token spelling (PR #3).
 
 ## [0.1.0] — 2026-11-01
 

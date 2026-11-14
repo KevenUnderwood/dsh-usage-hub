@@ -115,7 +115,7 @@ Restart `dsh web` (or the desktop app) afterwards and reload the page.
 > tarball instead:
 >
 > ```sh
-> npm pack && dsh plugin --profile web add ./dsh-usage-hub-0.1.0.tgz
+> npm pack && dsh plugin --profile web add ./dsh-usage-hub-0.2.0.tgz
 > ```
 
 The desktop app keeps its own profile (`~/.dsh/profiles/desktop`); install the plugin there

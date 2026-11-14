@@ -108,7 +108,7 @@ dsh plugin --profile web add ./dsh-usage-hub
 > 如果你在目录里装过依赖，删掉那个 `node_modules`，或者改装打包好的 tarball：
 >
 > ```sh
-> npm pack && dsh plugin --profile web add ./dsh-usage-hub-0.1.0.tgz
+> npm pack && dsh plugin --profile web add ./dsh-usage-hub-0.2.0.tgz
 > ```
 
 桌面版有自己独立的 profile（`~/.dsh/profiles/desktop`）；用桌面窗口的话那边也要装一份。
